@@ -1,0 +1,49 @@
+{
+  "info": {
+    "_postman_id": "33333333-3333-3333-3333-333333333333",
+    "name": "示例三：HTTPBin（HTTP 行为测试）",
+    "description": "专门用来验证各种 HTTP 行为：请求回显、JSON 返回、状态码等。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://httpbin.org" }
+  ],
+  "item": [
+    {
+      "name": "回显 GET 请求参数",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/get?name=demo&age=18", "host": ["{{baseUrl}}"], "path": ["get"] }
+      }
+    },
+    {
+      "name": "返回一段 JSON",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/json", "host": ["{{baseUrl}}"], "path": ["json"] }
+      }
+    },
+    {
+      "name": "回显 POST 请求体",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"hello\":\"world\",\"from\":\"demo\"}"
+        },
+        "url": { "raw": "{{baseUrl}}/post", "host": ["{{baseUrl}}"], "path": ["post"] }
+      }
+    },
+    {
+      "name": "指定返回 200 状态码",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/status/200", "host": ["{{baseUrl}}"], "path": ["status", "200"] }
+      }
+    }
+  ]
+}

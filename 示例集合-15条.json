@@ -1,0 +1,198 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-2026-1119-0000-123456789abc",
+    "name": "实验集合：本地演示接口（含预期结果）",
+    "description": "专门给「接口测试运行台」做的实验集合。共 15 个请求：查询/新增/修改/删除/异常 + 1 个用于验证 pm.test 被忽略的用例。判定规则只看状态码 2xx。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8765" },
+    { "key": "postId", "value": "1" },
+    { "key": "newTitle", "value": "自动化测试标题" }
+  ],
+  "item": [
+    {
+      "name": "01 查询类（预期全通过）",
+      "item": [
+        {
+          "name": "获取文章列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/posts", "host": ["{{baseUrl}}"], "path": ["posts"] }
+          }
+        },
+        {
+          "name": "获取单篇文章（用变量 postId）",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/posts/{{postId}}", "host": ["{{baseUrl}}"], "path": ["posts", "{{postId}}"] }
+          }
+        },
+        {
+          "name": "按 userId=2 过滤文章",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/posts?userId=2", "host": ["{{baseUrl}}"], "path": ["posts"] }
+          }
+        },
+        {
+          "name": "查询文章下的评论",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/posts/{{postId}}/comments", "host": ["{{baseUrl}}"], "path": ["posts", "{{postId}}", "comments"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 新增类（含失败）",
+      "item": [
+        {
+          "name": "合法创建文章 → 201",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"{{newTitle}}\",\"body\":\"测试内容\",\"userId\":1}"
+            },
+            "url": { "raw": "{{baseUrl}}/posts", "host": ["{{baseUrl}}"], "path": ["posts"] }
+          }
+        },
+        {
+          "name": "缺少必填字段 title → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"body\":\"测试内容\",\"userId\":1}"
+            },
+            "url": { "raw": "{{baseUrl}}/posts", "host": ["{{baseUrl}}"], "path": ["posts"] }
+          }
+        },
+        {
+          "name": "空标题 title → 422",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"\",\"body\":\"测试内容\",\"userId\":1}"
+            },
+            "url": { "raw": "{{baseUrl}}/posts", "host": ["{{baseUrl}}"], "path": ["posts"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 修改类",
+      "item": [
+        {
+          "name": "PUT 全量替换 → 200",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"替换后的标题\",\"body\":\"替换后的内容\",\"userId\":2}"
+            },
+            "url": { "raw": "{{baseUrl}}/posts/{{postId}}", "host": ["{{baseUrl}}"], "path": ["posts", "{{postId}}"] }
+          }
+        },
+        {
+          "name": "PATCH 局部修改 → 200",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"局部修改后的标题\"}"
+            },
+            "url": { "raw": "{{baseUrl}}/posts/{{postId}}", "host": ["{{baseUrl}}"], "path": ["posts", "{{postId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 删除类（幂等性）",
+      "item": [
+        {
+          "name": "删除 id=2 的文章 → 204",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/posts/2", "host": ["{{baseUrl}}"], "path": ["posts", "2"] }
+          }
+        },
+        {
+          "name": "再次删除 id=2 → 404",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/posts/2", "host": ["{{baseUrl}}"], "path": ["posts", "2"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 异常类（预期失败）",
+      "item": [
+        {
+          "name": "不存在的文章 → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/posts/999999", "host": ["{{baseUrl}}"], "path": ["posts", "999999"] }
+          }
+        },
+        {
+          "name": "路径参数类型非法 → 422",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/posts/abc", "host": ["{{baseUrl}}"], "path": ["posts", "abc"] }
+          }
+        },
+        {
+          "name": "不存在的路径 → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/not-exist", "host": ["{{baseUrl}}"], "path": ["not-exist"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 演示：pm.test 断言被忽略",
+      "item": [
+        {
+          "name": "故意写死失败的脚本，运行台仍判通过",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('这条断言在 Postman 里必定失败', function () {",
+                  "    pm.expect(1).to.equal(2);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/posts/1", "host": ["{{baseUrl}}"], "path": ["posts", "1"] }
+          }
+        }
+      ]
+    }
+  ]
+}

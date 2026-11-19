@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>接口测试运行台</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f6f8fa; color: #1f2328;
+         font-family: "Microsoft YaHei", "PingFang SC", -apple-system, sans-serif; }
+
+  header { background: #142b4f; color: #fff; padding: 20px 40px; }
+  header h1 { margin: 0 0 6px; font-size: 21px; }
+  header p { margin: 0; font-size: 13px; color: #b9c6da; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 24px 60px; }
+
+  .step { background: #fff; border: 1px solid #d0d7de; border-radius: 10px;
+          padding: 18px 20px; margin-bottom: 16px; }
+  .step h2 { margin: 0 0 14px; font-size: 14px; color: #57606a; font-weight: 600; }
+  .step h2 span { display: inline-block; background: #142b4f; color: #fff;
+                  width: 20px; height: 20px; line-height: 20px; text-align: center;
+                  border-radius: 50%; font-size: 12px; margin-right: 8px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+  .chip { border: 1px solid #d0d7de; background: #fff; border-radius: 8px;
+          padding: 9px 14px; cursor: pointer; font-size: 13px; font-family: inherit;
+          color: #1f2328; text-align: left; }
+  .chip:hover { border-color: #2f6fed; color: #2f6fed; }
+  .chip.active { border-color: #2f6fed; background: #eef4ff; color: #2f6fed; font-weight: 600; }
+  .chip small { display: block; color: #8c959f; font-size: 11px; font-weight: 400; margin-top: 2px; }
+
+  .upload { border: 1px dashed #b6c2d1; border-radius: 8px; padding: 9px 14px;
+            cursor: pointer; font-size: 13px; color: #57606a; background: #fbfcfd; }
+  .upload:hover { border-color: #2f6fed; color: #2f6fed; }
+
+  .status { font-size: 13px; color: #57606a; margin-top: 10px; }
+  .status b { color: #142b4f; }
+
+  .vars { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+  .var { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .var label { min-width: 120px; color: #57606a; font-family: Consolas, monospace; }
+  .var input { flex: 1; border: 1px solid #d0d7de; border-radius: 6px;
+               padding: 7px 10px; font-size: 13px; font-family: Consolas, monospace; }
+  .var input:focus { outline: none; border-color: #2f6fed; }
+
+  button.run { background: #2f6fed; color: #fff; border: 0; border-radius: 8px;
+               padding: 12px 32px; font-size: 15px; font-weight: 600;
+               cursor: pointer; font-family: inherit; }
+  button.run:hover:not(:disabled) { background: #1f56c9; }
+  button.run:disabled { background: #9db4e0; cursor: default; }
+
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+  .card { background: #fff; border: 1px solid #d0d7de; border-radius: 10px; padding: 14px 18px; }
+  .card .k { font-size: 12px; color: #656d76; margin-bottom: 6px; }
+  .card .v { font-size: 24px; font-weight: 700; color: #8c959f; }
+  .card.pass .v { color: #16a34a; }
+  .card.fail .v { color: #dc2626; }
+
+  .panel { background: #fff; border: 1px solid #d0d7de; border-radius: 10px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 11px 14px; background: #f6f8fa; color: #656d76;
+       font-weight: 600; border-bottom: 1px solid #d0d7de; white-space: nowrap; font-size: 12px; }
+  td { padding: 10px 14px; border-bottom: 1px solid #eaeef2; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .num { color: #8c959f; width: 46px; }
+  .method { font-family: Consolas, monospace; font-size: 12px; font-weight: 700; color: #57606a; }
+  .url { font-family: Consolas, monospace; font-size: 12px; color: #57606a;
+         max-width: 380px; overflow-wrap: anywhere; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px;
+           font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .p { background: #16a34a1a; color: #16a34a; }
+  .f { background: #dc26261a; color: #dc2626; }
+  .err { color: #dc2626; font-size: 12px; margin-top: 4px; }
+  .reason { color: #57606a; font-size: 12px; margin-top: 4px; line-height: 1.5; }
+  details { margin-top: 6px; }
+  summary { cursor: pointer; color: #2f6fed; font-size: 12px; }
+  pre { background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 8px;
+        font-size: 11.5px; max-width: 420px; overflow-x: auto; white-space: pre-wrap;
+        color: #57606a; margin: 6px 0 0; }
+  .col-result { min-width: 170px; }
+  .empty { text-align: center; color: #8c959f; padding: 40px 0; font-size: 14px; }
+
+  footer { margin-top: 18px; font-size: 12px; color: #8c959f; line-height: 1.8; }
+  code { background: #eef1f5; padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>接口测试运行台</h1>
+  <p>上传 Postman 集合，一键跑完所有请求，给出通过 / 失败和耗时</p>
+</header>
+
+<div class="wrap">
+
+  <div class="step">
+    <h2><span>1</span>选择要测试的集合</h2>
+    <div class="row" id="samples"></div>
+    <div class="row" style="margin-top:12px">
+      <label class="upload">
+        上传自己的 collection.json
+        <input type="file" id="file" accept=".json" hidden>
+      </label>
+      <span class="status" id="status">还没有选择集合</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2><span>2</span>变量与鉴权（可选，不填就用集合里的默认值）</h2>
+    <div class="vars" id="vars">
+      <div class="status">选择集合后，这里会出现它用到的变量</div>
+    </div>
+    <div class="var" style="margin-top:12px">
+      <label>Token（可选）</label>
+      <input id="token" placeholder="填入后会给每个请求加上 Authorization: Bearer xxx">
+    </div>
+  </div>
+
+  <div class="step">
+    <h2><span>3</span>开始运行</h2>
+    <div class="row">
+      <button class="run" id="run" disabled>开始运行</button>
+      <span class="status" id="hint">请先选择一个集合</span>
+    </div>
+  </div>
+
+  <div id="result" style="display:none">
+    <div class="cards">
+      <div class="card"><div class="k">请求总数</div><div class="v" id="c-total">—</div></div>
+      <div class="card pass"><div class="k">通过</div><div class="v" id="c-pass">—</div></div>
+      <div class="card fail"><div class="k">失败</div><div class="v" id="c-fail">—</div></div>
+      <div class="card"><div class="k">总耗时</div><div class="v" id="c-cost">—</div></div>
+    </div>
+    <div class="panel">
+      <table>
+        <thead>
+          <tr><th>#</th><th>方法</th><th>请求名</th><th>地址</th><th>期望</th><th>实际</th><th>耗时</th><th>结果</th></tr>
+        </thead>
+        <tbody id="body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    <b>判定规则：</b>默认看状态码是不是 2xx；如果请求名里写了 <code>→ 404</code> 这种，就按 404 判定（用于"预期失败"的用例）。<br>
+    <b>数据重置：</b>本地演示接口每次运行前会自动恢复初始数据，所以同一个集合反复跑结果一致（你自己的接口不会被碰）。<br>
+    每条结果下面都会写清原因，点「看服务端返回」能看到接口真实返回的内容。<br>
+    注意：集合里自带的 JavaScript 断言脚本（<code>pm.test</code>）不会被执行，这里是通用检查。<br>
+    仅支持公网可访问的接口；内网地址（192.168.x.x、localhost）本机演示可用，部署到公网后不可达。
+  </footer>
+</div>
+
+<script>
+let current = null;      // 当前 collection 对象
+let currentName = '';
+
+const $ = id => document.getElementById(id);
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function setStatus(text) { $('status').innerHTML = text; }
+
+function renderSamples(list) {
+  const box = $('samples');
+  box.innerHTML = list.map(s =>
+    `<button class="chip" data-id="${s.id}">${s.title}<small>${s.desc}</small></button>`
+  ).join('');
+  box.querySelectorAll('.chip').forEach(btn => {
+    btn.addEventListener('click', () => loadSample(btn.dataset.id, btn));
+  });
+}
+
+async function loadSample(id, btn) {
+  try {
+    const res = await fetch('/api/sample/' + id);
+    const data = await res.json();
+    applyCollection(data.collection, data.summary);
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    setStatus(`已加载示例：<b>${data.summary.name}</b> · ${data.summary.count} 个请求`);
+  } catch (e) {
+    setStatus('加载示例失败：' + e);
+  }
+}
+
+$('file').addEventListener('change', async (ev) => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  const form = new FormData();
+  form.append('file', f);
+
+  setStatus('正在解析文件…');
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) { setStatus('上传失败：' + (data.detail || res.status)); return; }
+
+    if (data.kind === 'environment') {
+      mergeVariables(data.variables);
+      setStatus(`已读取环境文件，补充了 ${data.variables.length} 个变量`);
+      return;
+    }
+
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    applyCollection(data.collection, data.summary);
+    setStatus(`已加载：<b>${data.summary.name}</b> · ${data.summary.count} 个请求`);
+  } catch (e) {
+    setStatus('上传失败：' + e);
+  } finally {
+    ev.target.value = '';
+  }
+});
+
+function applyCollection(coll, summary) {
+  current = coll;
+  currentName = summary.name;
+  $('run').disabled = false;
+  $('hint').textContent = '将执行 ' + summary.count + ' 个请求';
+  renderVariables(summary.variables);
+  $('result').style.display = 'none';
+}
+
+function renderVariables(vars) {
+  const box = $('vars');
+  if (!vars || vars.length === 0) {
+    box.innerHTML = '<div class="status">这个集合没有声明变量（如果有 {{xxx}} 没被替换，会原样发出去）</div>';
+    return;
+  }
+  box.innerHTML = vars.map(v => `
+    <div class="var">
+      <label>{{${v.key}}}</label>
+      <input data-key="${v.key}" value="${v.value ?? ''}">
+    </div>`).join('');
+}
+
+function mergeVariables(vars) {
+  const box = $('vars');
+  const existing = new Set([...box.querySelectorAll('input')].map(i => i.dataset.key));
+  vars.forEach(v => {
+    if (existing.has(v.key)) {
+      const input = box.querySelector(`input[data-key="${CSS.escape(v.key)}"]`);
+      if (input && v.value) input.value = v.value;
+    } else {
+      const div = document.createElement('div');
+      div.className = 'var';
+      div.innerHTML = `<label>{{${v.key}}}</label><input data-key="${v.key}" value="${v.value ?? ''}">`;
+      box.appendChild(div);
+    }
+  });
+}
+
+function collectVariables() {
+  const out = {};
+  document.querySelectorAll('#vars input').forEach(i => { out[i.dataset.key] = i.value; });
+  return out;
+}
+
+$('run').addEventListener('click', async () => {
+  const btn = $('run');
+  btn.disabled = true;
+  btn.textContent = '运行中…';
+  $('hint').textContent = '正在逐个发送请求…';
+
+  try {
+    const res = await fetch('/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        collection: current,
+        variables: collectVariables(),
+        token: $('token').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { $('hint').textContent = '运行失败：' + (data.detail || res.status); return; }
+
+    $('result').style.display = 'block';
+    $('c-total').textContent = data.total;
+    $('c-pass').textContent = data.passed;
+    $('c-fail').textContent = data.failed;
+    $('c-cost').textContent = data.duration + 's';
+
+    $('body').innerHTML = data.results.map(r => `
+      <tr>
+        <td class="num">${r.index}</td>
+        <td class="method">${r.method}</td>
+        <td>${esc(r.name)}</td>
+        <td class="url">${esc(r.url)}</td>
+        <td class="num">${esc(r.expected)}</td>
+        <td class="num">${r.status ?? '—'}</td>
+        <td class="num">${r.elapsed_ms}ms</td>
+        <td class="col-result">
+          <span class="badge ${r.passed ? 'p' : 'f'}">${r.passed ? '通过' : '失败'}</span>
+          <div class="reason">${esc(r.reason)}</div>
+          ${r.snippet ? `<details><summary>看服务端返回</summary><pre>${esc(r.snippet)}</pre></details>` : ''}
+        </td>
+      </tr>`).join('');
+
+    $('hint').textContent = data.failed === 0
+      ? '全部通过'
+      : `有 ${data.failed} 条失败，看一下「结果」列里的原因`;
+  } catch (e) {
+    $('hint').textContent = '请求失败：' + e;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '再运行一次';
+  }
+});
+
+fetch('/api/samples').then(r => r.json()).then(renderSamples).catch(() => {});
+
+// 演示模式：打开 ?auto=1 时，自动加载本地示例并运行一次（方便截图和演示）
+if (new URLSearchParams(location.search).get('auto')) {
+  window.addEventListener('load', async () => {
+    await loadSample('local');
+    setTimeout(() => $('run').click(), 300);
+  });
+}
+</script>
+</body>
+</html>
